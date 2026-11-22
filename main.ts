@@ -923,7 +923,7 @@ function buildPage() {
   drawText(cv, serifB, 'IRAN STRIKES BAHRAIN', MX, hy + 62, 44, INK, { tracking: 0.3 });
   const deck1 = wrapText(serifI, 'Tehran hits a US base and an industrial site as two tankers burn in the Strait of Hormuz — the Gulf war’s widest night yet.', 16, 520, 1, 0);
   deck1.forEach((ln, i) => drawText(cv, serifI, ln, MX, hy + 86 + i * 20, 16, '#333333'));
-  drawText(cv, sansB, 'BAHRAIN · HORMUZ · SUNDAY', MX, hy + 148, 10, GREY, { tracking: 1.2 });
+  drawText(cv, sansB, 'BAHRAIN · HORMUZ · SUNDAY (REUTERS)', MX, hy + 148, 10, GREY, { tracking: 1.2 });
   sceneHormuz(cv, 560, hy, RX - 560, hh);
   cv.rect(560, hy, RX - 560, 2, INK);
   cv.rect(560, hy + hh - 2, RX - 560, 2, INK);
@@ -946,9 +946,9 @@ function buildPage() {
     drawText(cv, sansB, credit, tx, y1 - 4, 9, GREY, { tracking: 1 });
   }
   hero2(MX, 477, sceneCOP, 'CLIMATE · COP31 ANTALYA', 'NO FOSSIL FUELS IN FINAL DRAFT',
-    'The summit’s dawn draft drops the words entirely and bets on clean power.', 'ANTALYA · SUNDAY');
+    'The summit’s dawn draft drops the words entirely and bets on clean power.', 'ANTALYA · SUNDAY (AP)');
   hero2(519, 477, sceneFactory, 'ASIA · DISASTER', '36 MISSING AFTER FACTORY FIRE',
-    'A candy plant burns in Cikande, Banten; three confirmed dead.', 'BANTEN · SUNDAY');
+    'A candy plant burns in Cikande, Banten; three confirmed dead.', 'BANTEN · SUNDAY (REUTERS)');
   hline(cv, MX, 476, RX - MX, INK, 1);
 
   return { cv, serifB, serifI, sansR, sansB };
@@ -959,15 +959,15 @@ function buildRest(p) {
   const { cv, serifB, serifI, sansR, sansB } = p;
   // ---- medium grid: 10 stories, 2 rows x 5 cols ----
   const mediums = [
-    ['SAUDI ARABIA', 'Riyadh downs 3 Houthi missiles', 'Saudi defences stop the salvo.', sceneMissile],
-    ['BALTIC SEA', 'Drone fire hits Sparta II', 'Sixteen crew evacuated.', sceneShip],
-    ['POLAND', 'Russian missiles crash in Poland', 'NATO invokes Article 4.', scenePoland],
-    ['NIGERIA', 'Boat toll rises to 24', 'Boat capsizes in Bayelsa.', sceneBoat],
-    ['MEXICO', '“Chapo Isidro” captured; 11 dead', 'A Sinaloa raid ends the manhunt.', sceneRaid],
-    ['IRAQ', 'Power plant fire kills 4, hurts 35', 'Hartha blaze knocks out 800 MW.', scenePlant],
-    ['FLORIDA', 'River hits record 18.8 ft', 'St. Johns tops its 1953 mark.', sceneFlood],
-    ['CHINA', 'Beijing slams US telecom ban', 'China vows to defend its firms.', sceneChip],
-    ['GENEVA', 'No deal to ban “killer robots”', 'UN talks end with no treaty.', sceneRobot],
+    ['SAUDI ARABIA', 'Riyadh downs 3 Houthi missiles', 'Saudi defences stop the salvo. (Reuters)', sceneMissile],
+    ['BALTIC SEA', 'Drone fire hits Sparta II', 'Sixteen crew evacuated. (Reuters)', sceneShip],
+    ['POLAND', 'Russian missiles crash in Poland', 'NATO invokes Article 4. (AP)', scenePoland],
+    ['NIGERIA', 'Boat toll rises to 24', 'Boat capsizes in Bayelsa. (Reuters)', sceneBoat],
+    ['MEXICO', '“Chapo Isidro” captured; 11 dead', 'A Sinaloa raid ends the manhunt. (AP)', sceneRaid],
+    ['IRAQ', 'Power plant fire kills 4, hurts 35', 'Hartha blaze cuts 800 MW. (Reuters)', scenePlant],
+    ['FLORIDA', 'River hits record 18.8 ft', 'St. Johns tops its 1953 mark. (AP)', sceneFlood],
+    ['CHINA', 'Beijing slams US telecom ban', 'China vows to defend firms. (Reuters)', sceneChip],
+    ['GENEVA', 'No deal to ban “killer robots”', 'UN talks end with no treaty. (AP)', sceneRobot],
     ['MARKETS', 'S&P’s worst week since April', 'A December Fed hike is near-certain.', sceneMarket],
   ];
   const cw = 187, cg = 8, rh = 90;
@@ -1005,27 +1005,27 @@ function buildRest(p) {
   cv.rect(616, 700, 380, 2, RED);
   const more = [
     ['SOMALIA', 'UAE envoy’s 72-hour deadline expires today.'],
-    ['UKRAINE', 'Missile strike on Kryvyi Rih kills 2, injures 83.'],
+    ['UKRAINE', 'Missile strike on Kryvyi Rih kills 2, injures 83. (AP)'],
     ['FRANCE', 'Cost-of-living protests enter sixth weekend.'],
     ['NEPAL', 'PM Balendra Shah visits India.'],
     ['SPAIN', 'Bank levy extended to 2027; €1.4bn a year.'],
     ['INDIA', 'Toxic alcohol kills 11 in Manipur.'],
     ['GAZA', 'Four Palestinians killed in overnight strikes.'],
-    ['GERMANY', 'IG Metall strikes Monday; 23,000 out.'],
-    ['AUSTRALIA', 'Canberra hits back at AUKUS report.'],
+    ['GERMANY', 'IG Metall strikes Monday; 23,000 out. (Reuters)'],
+    ['AUSTRALIA', 'Canberra hits back at AUKUS report. (Reuters)'],
     ['SOFTBANK', 'Son’s $1tn SK Hynix talks collapse.'],
-    ['NATO', 'Russia revives demand to roll back to 1997.'],
-    ['FLORIDA', 'Lake Harney crests at 13.0 ft Sunday.'],
-    ['PERU', 'M6.7 quake rattles Junín; no major damage.'],
-    ['HOUTHIS', 'Riyadh intercepts came a day after Hodeidah.'],
-    ['COP31', 'Panama threatens veto over quorum rules.'],
-    ['RUSSIA', 'Two Kh-101 missiles fell in Poland on Friday.'],
-    ['NIGERIA', 'Boat was carrying mourners; toll now 24.'],
-    ['MEXICO', 'Seven gunmen and four soldiers dead in raid.'],
-    ['IRAQ', 'Fire at Hartha plant cuts power to Basra.'],
-    ['UN', 'Killer-robot rules due by 2028, if agreed.'],
-    ['FED', 'Rate hike in December now almost certain.'],
-    ['OIL', 'Brent holds near $93 as Gulf tensions rise.'],
+    ['NATO', 'Russia revives demand to roll back to 1997. (AP)'],
+    ['CRICKET', 'India post record 629-6 in Wellington. (Reuters)'],
+    ['PERU', 'M6.7 quake rattles Junín; no major damage. (USGS)'],
+    ['MYANMAR', 'ICJ rules 9-6: Myanmar committed genocide. (AP)'],
+    ['SHENZHEN', 'Trump, Xi, Putin agree nuclear-risk talks. (AP)'],
+    ['GTA VI', '$3.79bn day one, biggest launch ever. (Reuters)'],
+    ['ANTHROPIC', 'Biggest IPO ever; $2tn Nasdaq debut. (AP)'],
+    ['LEBANON', 'Aoun: Israel out, no arms outside state. (AFP)'],
+    ['USA', 'Trump vows 10% cap on card interest. (AP)'],
+    ['FBI', 'FBI probes hack of crime database. (AP)'],
+    ['WEST BANK', 'Woman, 72, killed in Jericho clashes. (AP)'],
+    ['RUGBY', 'France reach final; face South Africa. (Reuters)'],
   ];
   for (let i = 0; i < more.length; i++) {
     const y = 714 + i * 11.5;
