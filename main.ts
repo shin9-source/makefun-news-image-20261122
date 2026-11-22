@@ -974,13 +974,16 @@ function buildPage() {
     cv.line(x, y, x + len, y + (r() - 0.5) * 2, '#ece3cb', 0.5);
   }
 
-  // ---- masthead ----
+  // ---- masthead (rev11, rank-1 style: the DATE is the big title) ----
   hline(cv, MX, 14, RX - MX, INK, 2);
   hline(cv, MX, 18, RX - MX, INK, 1);
-  drawText(cv, serifB, 'THE WORLD TODAY', W / 2, 76, 64, INK, { align: 'center', tracking: 0.5 });
-  drawText(cv, sansB, 'SUNDAY, 22 NOVEMBER 2026', MX, 94, 12, INK, { tracking: 1.5 });
-  drawText(cv, sansB, 'No. 326', W / 2, 94, 12, INK, { align: 'center', tracking: 1.5 });
-  drawText(cv, sansB, '42 STORIES · 7 REGIONS', RX, 94, 12, INK, { align: 'right', tracking: 1.5 });
+  // top meta line: kicker left (red), story count + issue number right
+  drawText(cv, sansB, 'THE WORLD TODAY', MX, 29, 12, RED, { tracking: 1.5 });
+  drawText(cv, sansB, '42 STORIES · 7 REGIONS · No. 326', RX, 29, 12, INK, { align: 'right', tracking: 1.5 });
+  // big date title (was 12pt small text; now 60pt serif like rank 1)
+  drawText(cv, serifB, 'Sunday 22 November 2026', W / 2, 73, 60, INK, { align: 'center', tracking: 0.5 });
+  // italic subtitle under the date, rank-1 style (only facts already on this page)
+  drawText(cv, serifI, 'War spreads in the Gulf · COP31 drops “fossil fuels” · Factory fire leaves 36 missing', W / 2, 95, 12, INK, { align: 'center' });
   cv.rect(MX, 100, RX - MX, 3, RED);
 
   // ---- stat strip: 6 numbers ----
