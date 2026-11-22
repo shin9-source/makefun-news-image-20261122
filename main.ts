@@ -1047,10 +1047,10 @@ function buildPage() {
     'Tehran hits a US base and an industrial site as two tankers burn in the Strait of Hormuz — the Gulf war’s widest night yet. No casualties were reported.');
   heroCard(MX + hw + 8, 318, sceneCOP, 'CLIMATE · COP31 ANTALYA', 'COP31 SUMMIT · ANTALYA',
     'ANTALYA · SUNDAY (AP)', 'NO FOSSIL FUELS IN FINAL DRAFT',
-    'The summit’s dawn draft drops the words entirely and bets on clean power.');
+    'The summit’s dawn draft drops the words entirely and bets on clean power. Delegates agreed a 35% clean-power goal for 2035 in the final text.');
   heroCard(MX + hw + 8 + 318 + 8, hw, sceneFactory, 'ASIA · DISASTER', 'CANDY PLANT · CIKANDE, BANTEN',
     'BANTEN · SUNDAY (REUTERS)', '36 MISSING AFTER FACTORY FIRE',
-    'A candy plant burns in Cikande, Banten; three confirmed dead.');
+    'A candy plant burns in Cikande, Banten; three confirmed dead and 36 people missing after the blaze tore through the factory on Sunday.');
   hline(cv, MX, 436, RX - MX, INK, 1);
 
   // rev7: heroes are now the 3 equal cards above (hero2 layout removed).
@@ -1063,35 +1063,44 @@ function buildRest(p) {
   const { cv, serifB, serifI, sansR, sansB } = p;
   // ---- medium grid: 10 stories, 2 rows x 5 cols ----
   const mediums = [
-    ['SAUDI ARABIA', 'Riyadh downs 3 Houthi missiles', 'Saudi defences stop the salvo. (Reuters)', sceneMissile],
-    ['BALTIC SEA', 'Drone fire hits Sparta II', 'Sixteen crew evacuated. (Reuters)', sceneShip],
-    ['POLAND', 'Russian missiles crash in Poland', 'NATO invokes Article 4. (AP)', scenePoland],
-    ['NIGERIA', 'Boat toll rises to 24', 'Boat capsizes in Bayelsa. (Reuters)', sceneBoat],
-    ['MEXICO', '“Chapo Isidro” captured; 11 dead', 'A Sinaloa raid ends the manhunt. (AP)', sceneRaid],
-    ['IRAQ', 'Power plant fire kills 4, hurts 35', 'Hartha blaze cuts 800 MW. (Reuters)', scenePlant],
-    ['FLORIDA', 'River hits record 18.8 ft', 'St. Johns tops its 1953 mark. (AP)', sceneFlood],
-    ['CHINA', 'Beijing slams US telecom ban', 'China vows to defend firms. (Reuters)', sceneChip],
-    ['GENEVA', 'No deal to ban “killer robots”', 'UN talks end with no treaty. (AP)', sceneRobot],
-    ['MARKETS', 'S&P’s worst week since April', 'A December Fed hike is near-certain.', sceneMarket],
+    ['SAUDI ARABIA', 'Riyadh downs 3 Houthi missiles', 'Saudi defences stop the salvo over Riyadh; three missiles downed. (Reuters)', sceneMissile],
+    ['BALTIC SEA', 'Drone fire hits Sparta II', 'Two drones hit the ship in the Gulf of Finland; sixteen crew evacuated. (Reuters)', sceneShip],
+    ['POLAND', 'Russian missiles crash in Poland', 'Two Russian Kh-101 missiles fell in Poland; NATO invokes Article 4. (AP)', scenePoland],
+    ['NIGERIA', 'Boat toll rises to 24', 'Boat capsizes in Bayelsa state; the death toll rises to 24. (Reuters)', sceneBoat],
+    ['MEXICO', '“Chapo Isidro” captured; 11 dead', 'A Sinaloa raid ends the manhunt; eleven killed in the operation. (AP)', sceneRaid],
+    ['IRAQ', 'Power plant fire kills 4, hurts 35', 'Hartha blaze cuts 800 MW; four killed and 35 hurt in the fire. (Reuters)', scenePlant],
+    ['FLORIDA', 'River hits record 18.8 ft', 'St. Johns River hits a record 18.8 ft, topping its 1953 mark. (AP)', sceneFlood],
+    ['CHINA', 'Beijing slams US telecom ban', 'China vows to defend its firms after the US telecom ban. (Reuters)', sceneChip],
+    ['GENEVA', 'No deal to ban “killer robots”', 'UN talks in Geneva end with no treaty; killer robots stay unregulated. (AP)', sceneRobot],
+    ['MARKETS', 'S&P’s worst week since April', 'S&P posts its worst week since April as a December Fed hike looms.', sceneMarket],
   ];
-  const cw = 187, cg = 8, rh = 90;
+  const cw = 187, cg = 8, rh = 92; // rev8: taller rows for 2-line decks
   for (let i = 0; i < 10; i++) {
     const col = i % 5, row = Math.floor(i / 5);
     const x = MX + col * (cw + cg), y = 444 + row * (rh + 8);
     const m = mediums[i];
-    m[3](cv, x, y, cw, 36);
+    m[3](cv, x, y, cw, 30);
     // rev7: rank-1 style coloured banner with the location in white (was small caps)
-    cv.rect(x, y + 36, cw, 14, RED);
-    drawText(cv, sansB, m[0], x + 4, y + 47, 8.5, '#ffffff', { tracking: 1 });
-    const hl = wrapText(serifB, m[1], 12, cw, 1, 0);
-    hl.slice(0, 2).forEach((ln, k) => drawText(cv, serifB, ln, x, y + 63 + k * 14, 12, INK));
-    drawText(cv, sansR, m[2], x, y + 88, 9.5, '#444444');
+    cv.rect(x, y + 30, cw, 13, RED);
+    drawText(cv, sansB, m[0], x + 4, y + 41, 8.5, '#ffffff', { tracking: 1 });
+    const hl = wrapText(serifB, m[1], 11.5, cw, 1, 0);
+    hl.slice(0, 2).forEach((ln, k) => drawText(cv, serifB, ln, x, y + 55 + k * 13, 11.5, INK));
+    // rev8: deck expanded to 2 full lines of verified detail
+    const dk = wrapText(sansR, m[2], 9, cw, 1, 0);
+    dk.slice(0, 2).forEach((ln, k) => drawText(cv, sansR, ln, x, y + 80 + k * 9, 9, '#444444'));
   }
   hline(cv, MX, 640, RX - MX, INK, 1);
 
+  // ---- THE DAY IN BRIEF (rev8): conclusion strip, only facts already on this page ----
+  cv.rect(MX, 646, RX - MX, 30, '#efe8d6');
+  cv.rect(MX, 676, RX - MX, 1, INK);
+  drawText(cv, sansB, 'THE DAY IN BRIEF', MX + 10, 666, 10, RED, { tracking: 1 });
+  drawText(cv, serifI, 'War spreads in the Gulf: Iran strikes a US base in Bahrain as two tankers burn in Hormuz.', 200, 660, 10, INK);
+  drawText(cv, serifI, 'COP31’s final draft drops “fossil fuels”; a candy-plant fire in Banten leaves 36 missing.', 200, 672, 10, INK);
+
   // ---- map (left) ---- rev7: region bar moved to the top (under the stat strip)
-  drawText(cv, sansB, 'THE WORLD IN ONE DAY', MX, 660, 13, INK, { tracking: 1 });
-  drawText(cv, sansB, '22 NOV 2026 · 42 STORIES, 7 REGIONS', 600, 660, 10, GREY, { align: 'right', tracking: 0.8 });
+  drawText(cv, sansB, 'THE WORLD IN ONE DAY', MX, 688, 13, INK, { tracking: 1 });
+  drawText(cv, sansB, '22 NOV 2026 · 42 STORIES, 7 REGIONS', 600, 688, 10, GREY, { align: 'right', tracking: 0.8 });
   const dots = [
     // rev5: Gulf / Europe / Bengal / SE-Asia dots nudged a few degrees so every
     // number stays readable; Korea is one dot (Seoul) — Pyongyang is 2.8px away
@@ -1114,8 +1123,8 @@ function buildRest(p) {
     { n: 29, lon: 28.0, lat: -26.2 }, { n: 30, lon: 60, lat: 38 },
     { n: 31, lon: -1.55, lat: 53.8 }, { n: 32, lon: 12, lat: 37 },
   ];
-  drawMap(cv, MX, 668, 572, 220, dots, sansB, -55, 76);
-  cv.rect(MX, 668, 572, 2, INK);
+  drawMap(cv, MX, 696, 572, 190, dots, sansB, -55, 76);
+  cv.rect(MX, 696, 572, 2, INK);
   cv.rect(MX, 886, 572, 2, INK);
   // rev7: 32-dot legend in 5 lines; dot 3 covers Banten+Jakarta, dot 14 Gaza+Jerusalem
   drawText(cv, sansR, '1 Bahrain, 2 Antalya, 3 Banten · Jakarta, 4 Riyadh, 5 Finland, 6 Poland, 7 Bayelsa,', MX, 894, 9, '#444444');
@@ -1126,8 +1135,8 @@ function buildRest(p) {
   drawText(cv, sansR, 'EACH DOT IS A STORY LOCATION — STORIES SHARING A CITY SHARE A DOT', MX + 286, 964, 8.5, GREY, { align: 'center', tracking: 0.8 });
 
   // ---- 29 MORE STORIES (right column) ---- rev7: 22 + 7 verified new stories
-  drawText(cv, sansB, '29 MORE STORIES', 616, 660, 13, INK, { tracking: 1 });
-  cv.rect(616, 666, 380, 2, RED);
+  drawText(cv, sansB, '29 MORE STORIES', 616, 688, 13, INK, { tracking: 1 });
+  cv.rect(616, 694, 380, 2, RED);
   const more = [
     ['SOMALIA', 'UAE envoy’s 72-hour deadline expires today.'],
     ['UKRAINE', 'Missile strike on Kryvyi Rih kills 2, injures 83. (AP)'],
@@ -1161,11 +1170,11 @@ function buildRest(p) {
     ['ISRAEL', 'Eisenkot invites Likud to coalition talks. (AFP)'],
   ];
   for (let i = 0; i < more.length; i++) {
-    const y = 676 + i * 10.4; // rev7: denser leading so 29 items reach the footer
+    const y = 703 + i * 9.6; // rev8: denser leading so 29 items still reach the footer
     cv.rect(616, y - 6, 5, 5, RED);
     drawText(cv, sansB, more[i][0] + ' — ', 626, y, 9.5, INK, { tracking: 0.3 });
     const w0 = textWidth(sansB, more[i][0] + ' — ', 9.5, 1, 0.3);
-    drawText(cv, sansR, more[i][1], 626 + w0, y, 9.5, '#333333');
+    drawText(cv, sansR, more[i][1], 626 + w0, y, 9, '#333333');
   }
 
   // ---- footer: DATE CHECK ----
