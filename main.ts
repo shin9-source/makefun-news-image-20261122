@@ -918,8 +918,8 @@ function drawMap(cv, x, y, w, h, dots, fontSans, latMin, latMax) {
   // scale bar (positions checked clear of every dot and coastline).
   const OCEAN = '#8ab4c8';
   drawText(cv, fontSans, 'PACIFIC OCEAN', px(-140), py(-10) + 3, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
-  drawText(cv, fontSans, 'ATLANTIC', px(-35), py(37) + 3, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
-  drawText(cv, fontSans, 'OCEAN', px(-35), py(37) + 15, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
+  drawText(cv, fontSans, 'ATLANTIC', px(-45), py(37) + 3, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
+  drawText(cv, fontSans, 'OCEAN', px(-45), py(37) + 15, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
   drawText(cv, fontSans, 'INDIAN OCEAN', px(75), py(-29) + 3, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
   // compass rose in the open South Atlantic
   const ccx = px(-20), ccy = py(-39);
@@ -934,17 +934,23 @@ function drawMap(cv, x, y, w, h, dots, fontSans, latMin, latMax) {
   drawText(cv, fontSans, '0', sbx, sby - 4, 8, OCEAN, { align: 'center' });
   drawText(cv, fontSans, '2000', sbx + 29, sby - 4, 8, OCEAN, { align: 'center' });
   drawText(cv, fontSans, '4000 KM', sbx + 58, sby - 4, 8, OCEAN, { align: 'center' });
-  // dots (numbered, big) — rev5: enlarged r=12, thicker white ring
-  // rev7: draw all circles first, then all numbers last, so no dot's circle
-  // ever covers another dot's number (the Europe/Gulf clusters are dense).
+  // dots (numbered) — rev9: r=10 / 10pt numbers for the smaller map (r=12 was
+  // too blobby in the tighter Europe/Gulf clusters); numbers still drawn last.
   for (const d of dots) {
     const dx = px(d.lon), dy = py(d.lat);
-    cv.circle(dx, dy, 12, RED);
-    cv.ring(dx, dy, 12, '#ffffff', 2);
+    cv.circle(dx, dy, 10, RED);
+    cv.ring(dx, dy, 10, '#ffffff', 2);
   }
+  // rev9: numbers get a 1px dark-red halo (8 offset passes) BEFORE the white
+  // pass — in the dense clusters a white number can fall across a neighbour
+  // dot's white ring, and white-on-white makes the strokes vanish. The halo
+  // keeps every number readable even where circles overlap.
   for (const d of dots) {
     const dx = px(d.lon), dy = py(d.lat);
-    drawText(cv, fontSans, String(d.n), dx, dy + 4, 12, '#ffffff', { align: 'center' });
+    for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      drawText(cv, fontSans, String(d.n), dx + ox, dy + 3.5 + oy, 10, '#7a150f', { align: 'center' });
+    }
+    drawText(cv, fontSans, String(d.n), dx, dy + 3.5, 10, '#ffffff', { align: 'center' });
   }
 }
 
@@ -1099,20 +1105,23 @@ function buildRest(p) {
   drawText(cv, serifI, 'COP31’s final draft drops “fossil fuels”; a candy-plant fire in Banten leaves 36 missing.', 200, 672, 10, INK);
 
   // ---- map (left) ---- rev7: region bar moved to the top (under the stat strip)
+  // rev9: map shrunk 572x190 -> 430x140 (user: "petanya ke gedean"); the
+  // more-stories column widens into the freed space and a second brief strip
+  // fills the gap under the legend so the bottom stays full, no holes.
   drawText(cv, sansB, 'THE WORLD IN ONE DAY', MX, 688, 13, INK, { tracking: 1 });
-  drawText(cv, sansB, '22 NOV 2026 · 42 STORIES, 7 REGIONS', 600, 688, 10, GREY, { align: 'right', tracking: 0.8 });
+  drawText(cv, sansB, '22 NOV 2026 · 42 STORIES, 7 REGIONS', MX + 430, 688, 10, GREY, { align: 'right', tracking: 0.8 });
   const dots = [
     // rev5: Gulf / Europe / Bengal / SE-Asia dots nudged a few degrees so every
     // number stays readable; Korea is one dot (Seoul) — Pyongyang is 2.8px away
     // on this scale and would hide it. Peru is already dot 11 (Junín).
-    { n: 1, lon: 56, lat: 26 }, { n: 2, lon: 28, lat: 39 }, { n: 3, lon: 106.3, lat: -6.4 },
+    { n: 1, lon: 56, lat: 26 }, { n: 2, lon: 26.5, lat: 40 }, { n: 3, lon: 106.3, lat: -6.4 },
     { n: 4, lon: 43, lat: 21 }, { n: 5, lon: 25, lat: 63 }, { n: 6, lon: 22, lat: 52 },
     { n: 7, lon: 6.3, lat: 4.9 }, { n: 8, lon: -107, lat: 25 }, { n: 9, lon: 48, lat: 33 },
     { n: 10, lon: -81.5, lat: 28.5 }, { n: 11, lon: -75.2, lat: -11.2 }, { n: 12, lon: 6.1, lat: 44 },
     { n: 13, lon: 116.4, lat: 39.9 }, { n: 14, lon: 34.5, lat: 31.5 },
     { n: 15, lon: 45.3, lat: 2.0 }, { n: 16, lon: 33, lat: 50 }, { n: 17, lon: 127.0, lat: 37.5 },
-    { n: 18, lon: 81, lat: 30 }, { n: 19, lon: -7, lat: 38 }, { n: 20, lon: 93.9, lat: 24.7 },
-    { n: 21, lon: 11, lat: 52.5 }, { n: 22, lon: 149.1, lat: -35.3 }, { n: 23, lon: 98, lat: 14 },
+    { n: 18, lon: 80, lat: 32 }, { n: 19, lon: -7, lat: 38 }, { n: 20, lon: 96, lat: 25.5 },
+    { n: 21, lon: 11, lat: 54.5 }, { n: 22, lon: 149.1, lat: -35.3 }, { n: 23, lon: 96, lat: 14 },
     { n: 24, lon: 106, lat: 10 }, { n: 25, lon: 86, lat: 21 }, { n: 26, lon: 19.8, lat: 41.3 },
     { n: 27, lon: -122.3, lat: 47.6 }, { n: 28, lon: -115.1, lat: 36.2 },
     // rev7: 4 new dots (29-32). Tehran nudged east to (60,38) and Rome to (12,37)
@@ -1120,23 +1129,36 @@ function buildRest(p) {
     // Gulf bourses shares dot 1 (Bahrain), EU-Indonesia shares dot 3 (Jakarta),
     // Eisenkot shares dot 14 (Gaza/Jerusalem) — those cities sit within a few px
     // of an existing dot at this scale, so a separate dot would be unreadable.
-    { n: 29, lon: 28.0, lat: -26.2 }, { n: 30, lon: 60, lat: 38 },
-    { n: 31, lon: -1.55, lat: 53.8 }, { n: 32, lon: 12, lat: 37 },
+    // rev9: map shrunk to 430x140, so nudges grow — Rome (12,35), Berlin (11,54.5),
+    // Tehran (62,39), Antalya (26.5,40), Kathmandu (80,32), Manipur (96,25.5),
+    // Yangon (96,14). Numbers stay readable (verified at 4x zoom).
+    { n: 29, lon: 28.0, lat: -26.2 }, { n: 30, lon: 62, lat: 39 },
+    { n: 31, lon: -1.55, lat: 53.8 }, { n: 32, lon: 12, lat: 35 },
   ];
-  drawMap(cv, MX, 696, 572, 190, dots, sansB, -55, 76);
-  cv.rect(MX, 696, 572, 2, INK);
-  cv.rect(MX, 886, 572, 2, INK);
+  drawMap(cv, MX, 696, 430, 140, dots, sansB, -55, 76);
+  cv.rect(MX, 696, 430, 2, INK);
+  cv.rect(MX, 836, 430, 2, INK);
   // rev7: 32-dot legend in 5 lines; dot 3 covers Banten+Jakarta, dot 14 Gaza+Jerusalem
-  drawText(cv, sansR, '1 Bahrain, 2 Antalya, 3 Banten · Jakarta, 4 Riyadh, 5 Finland, 6 Poland, 7 Bayelsa,', MX, 894, 9, '#444444');
-  drawText(cv, sansR, '8 Sinaloa, 9 Basra, 10 Florida, 11 Junín, 12 Geneva, 13 Beijing, 14 Gaza · Jerusalem,', MX, 906, 9, '#444444');
-  drawText(cv, sansR, '15 Mogadishu, 16 Kyiv, 17 Seoul, 18 Kathmandu, 19 Madrid, 20 Manipur, 21 Berlin,', MX, 918, 9, '#444444');
-  drawText(cv, sansR, '22 Canberra, 23 Yangon, 24 Bangkok, 25 Dhaka, 26 Tirana, 27 Seattle, 28 Vegas,', MX, 930, 9, '#444444');
-  drawText(cv, sansR, '29 Johannesburg, 30 Tehran, 31 Leeds, 32 Rome.', MX, 942, 9, '#444444');
-  drawText(cv, sansR, 'EACH DOT IS A STORY LOCATION — STORIES SHARING A CITY SHARE A DOT', MX + 286, 964, 8.5, GREY, { align: 'center', tracking: 0.8 });
+  // rev9: same 5 lines (max 339px at 9pt, fits the 430px map); moved up with the map
+  drawText(cv, sansR, '1 Bahrain, 2 Antalya, 3 Banten · Jakarta, 4 Riyadh, 5 Finland, 6 Poland, 7 Bayelsa,', MX, 846, 9, '#444444');
+  drawText(cv, sansR, '8 Sinaloa, 9 Basra, 10 Florida, 11 Junín, 12 Geneva, 13 Beijing, 14 Gaza · Jerusalem,', MX, 859, 9, '#444444');
+  drawText(cv, sansR, '15 Mogadishu, 16 Kyiv, 17 Seoul, 18 Kathmandu, 19 Madrid, 20 Manipur, 21 Berlin,', MX, 872, 9, '#444444');
+  drawText(cv, sansR, '22 Canberra, 23 Yangon, 24 Bangkok, 25 Dhaka, 26 Tirana, 27 Seattle, 28 Vegas,', MX, 885, 9, '#444444');
+  drawText(cv, sansR, '29 Johannesburg, 30 Tehran, 31 Leeds, 32 Rome.', MX, 898, 9, '#444444');
+  drawText(cv, sansR, 'EACH DOT IS A STORY LOCATION — STORIES SHARING A CITY SHARE A DOT', MX + 215, 912, 8.5, GREY, { align: 'center', tracking: 0.8 });
+  // rev9: second brief strip ("ALSO TODAY") fills the space freed under the
+  // legend — same style as THE DAY IN BRIEF, only facts already on this page
+  // (G20, EU–Indonesia, Leeds, F1 — all in the more-stories list).
+  cv.rect(MX, 924, 430, 36, '#efe8d6');
+  cv.rect(MX, 960, 430, 1, INK);
+  drawText(cv, sansB, 'ALSO TODAY', MX + 10, 947, 10, RED, { tracking: 1 });
+  drawText(cv, serifI, 'G20 opens in Johannesburg without the US; EU–Indonesia sign a deal.', 150, 941, 10, INK);
+  drawText(cv, serifI, 'Leeds thrash Chelsea 4-1; Verstappen wins in Las Vegas again.', 150, 953, 10, INK);
 
   // ---- 29 MORE STORIES (right column) ---- rev7: 22 + 7 verified new stories
-  drawText(cv, sansB, '29 MORE STORIES', 616, 688, 13, INK, { tracking: 1 });
-  cv.rect(616, 694, 380, 2, RED);
+  // rev9: widened 380 -> 518px into the space freed by the smaller map
+  drawText(cv, sansB, '29 MORE STORIES', 478, 688, 13, INK, { tracking: 1 });
+  cv.rect(478, 694, 518, 2, RED);
   const more = [
     ['SOMALIA', 'UAE envoy’s 72-hour deadline expires today.'],
     ['UKRAINE', 'Missile strike on Kryvyi Rih kills 2, injures 83. (AP)'],
@@ -1171,10 +1193,10 @@ function buildRest(p) {
   ];
   for (let i = 0; i < more.length; i++) {
     const y = 703 + i * 9.6; // rev8: denser leading so 29 items still reach the footer
-    cv.rect(616, y - 6, 5, 5, RED);
-    drawText(cv, sansB, more[i][0] + ' — ', 626, y, 9.5, INK, { tracking: 0.3 });
+    cv.rect(478, y - 6, 5, 5, RED);
+    drawText(cv, sansB, more[i][0] + ' — ', 488, y, 9.5, INK, { tracking: 0.3 });
     const w0 = textWidth(sansB, more[i][0] + ' — ', 9.5, 1, 0.3);
-    drawText(cv, sansR, more[i][1], 626 + w0, y, 9, '#333333');
+    drawText(cv, sansR, more[i][1], 488 + w0, y, 9, '#333333');
   }
 
   // ---- footer: DATE CHECK ----
