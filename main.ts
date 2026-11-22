@@ -1149,11 +1149,14 @@ function buildRest(p) {
   // rev9: second brief strip ("ALSO TODAY") fills the space freed under the
   // legend — same style as THE DAY IN BRIEF, only facts already on this page
   // (G20, EU–Indonesia, Leeds, F1 — all in the more-stories list).
-  cv.rect(MX, 924, 430, 36, '#efe8d6');
-  cv.rect(MX, 960, 430, 1, INK);
+  // rev10: 3 lines (added Nigeria boat toll + S&P week, both already on the
+  // page) so the strip reaches down to the footer, no gap left under it.
+  cv.rect(MX, 920, 430, 52, '#efe8d6');
+  cv.rect(MX, 972, 430, 1, INK);
   drawText(cv, sansB, 'ALSO TODAY', MX + 10, 947, 10, RED, { tracking: 1 });
-  drawText(cv, serifI, 'G20 opens in Johannesburg without the US; EU–Indonesia sign a deal.', 150, 941, 10, INK);
-  drawText(cv, serifI, 'Leeds thrash Chelsea 4-1; Verstappen wins in Las Vegas again.', 150, 953, 10, INK);
+  drawText(cv, serifI, 'G20 opens in Johannesburg without the US; EU–Indonesia sign a deal.', 150, 936, 10, INK);
+  drawText(cv, serifI, 'Leeds thrash Chelsea 4-1; Verstappen wins in Las Vegas again.', 150, 948, 10, INK);
+  drawText(cv, serifI, 'Nigeria boat toll 24; S&P worst week since April.', 150, 960, 10, INK);
 
   // ---- 29 MORE STORIES (right column) ---- rev7: 22 + 7 verified new stories
   // rev9: widened 380 -> 518px into the space freed by the smaller map
@@ -1191,12 +1194,49 @@ function buildRest(p) {
     ['INDONESIA', 'EU trade deal signed after 10 years of talks. (Reuters)'],
     ['ISRAEL', 'Eisenkot invites Likud to coalition talks. (AFP)'],
   ];
-  for (let i = 0; i < more.length; i++) {
-    const y = 703 + i * 9.6; // rev8: denser leading so 29 items still reach the footer
-    cv.rect(478, y - 6, 5, 5, RED);
-    drawText(cv, sansB, more[i][0] + ' — ', 488, y, 9.5, INK, { tracking: 0.3 });
-    const w0 = textWidth(sansB, more[i][0] + ' — ', 9.5, 1, 0.3);
-    drawText(cv, sansR, more[i][1], 488 + w0, y, 9, '#333333');
+  // rev10: reflowed into 2 columns (15 + 14) — the single-column list left a
+  // ~200px empty band down the right side (each item was one short line).
+  // At ~250px per column the same texts wrap to ~2 lines and fill the full
+  // width. No text changed; per-column leading is stretched so both columns
+  // end at the footer.
+  function wrapItem(country, text, maxW) {
+    const toks = [];
+    for (const w of (country + ' —').split(' ')) toks.push([w, true]);
+    for (const w of text.split(' ')) toks.push([w, false]);
+    const lines = [];
+    let cur = [], curW = 0;
+    const sp = textWidth(sansR, ' ', 9, 1, 0);
+    for (const [w, b] of toks) {
+      const ww = textWidth(b ? sansB : sansR, w, b ? 9.5 : 9, 1, 0);
+      const add = cur.length ? sp + ww : ww;
+      if (curW + add <= maxW || !cur.length) { cur.push([w, b]); curW += add; }
+      else { lines.push(cur); cur = [[w, b]]; curW = ww; }
+    }
+    if (cur.length) lines.push(cur);
+    return lines;
+  }
+  const colW = 253, colGap = 12, itemGap = 2, listTop = 703, listBot = 972;
+  const colItems = [more.slice(0, 15), more.slice(15)];
+  for (let c = 0; c < 2; c++) {
+    const x0 = 478 + c * (colW + colGap);
+    const wrapped = colItems[c].map(([ct, tx]) => wrapItem(ct, tx, colW - 10));
+    const nLines = wrapped.reduce((s, it) => s + it.length, 0);
+    let lh = (listBot - listTop - (colItems[c].length - 1) * itemGap) / nLines;
+    if (lh > 9.6) lh = 9.6;
+    let y = listTop;
+    for (const lines of wrapped) {
+      cv.rect(x0, y - 6, 5, 5, RED);
+      for (const ln of lines) {
+        let tx = x0 + 10;
+        for (const [w, b] of ln) {
+          const f = b ? sansB : sansR, s = b ? 9.5 : 9;
+          drawText(cv, f, w, tx, y, s, b ? INK : '#333333');
+          tx += textWidth(f, w, s, 1, 0) + textWidth(sansR, ' ', 9, 1, 0);
+        }
+        y += lh;
+      }
+      y += itemGap;
+    }
   }
 
   // ---- footer: DATE CHECK ----
