@@ -920,7 +920,9 @@ function buildPage() {
   // ---- HERO 1: Iran strikes Bahrain (lead) ----
   const hy = 176, hh = 152;
   labelChip(cv, MX, hy + 6, 'MIDDLE EAST · WAR SPREADS', sansB, RED, '#ffffff', 11);
-  drawText(cv, serifB, 'IRAN STRIKES BAHRAIN', MX, hy + 62, 44, INK, { tracking: 0.3 });
+  // lead headline: size 40 -> title ~491px wide, ends x~519, 41px clear of the hero
+  // image (starts x=560). At size 44 it was 539px wide, ended x=567, and the final N hid behind the hero.
+  drawText(cv, serifB, 'IRAN STRIKES BAHRAIN', MX, hy + 62, 40, INK, { tracking: 0.3 });
   const deck1 = wrapText(serifI, 'Tehran hits a US base and an industrial site as two tankers burn in the Strait of Hormuz — the Gulf war’s widest night yet.', 16, 520, 1, 0);
   deck1.forEach((ln, i) => drawText(cv, serifI, ln, MX, hy + 86 + i * 20, 16, '#333333'));
   drawText(cv, sansB, 'BAHRAIN · HORMUZ · SUNDAY (REUTERS)', MX, hy + 148, 10, GREY, { tracking: 1.2 });
