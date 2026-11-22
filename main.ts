@@ -1006,7 +1006,7 @@ function buildRest(p) {
   const more = [
     ['SOMALIA', 'UAE envoy’s 72-hour deadline expires today.'],
     ['UKRAINE', 'Missile strike on Kryvyi Rih kills 2, injures 83. (AP)'],
-    ['FRANCE', 'Cost-of-living protests enter sixth weekend.'],
+    ['SOUTH KOREA', 'Minister quits over AI exam-cheating scandal. (AFP)'],
     ['NEPAL', 'PM Balendra Shah visits India.'],
     ['SPAIN', 'Bank levy extended to 2027; €1.4bn a year.'],
     ['INDIA', 'Toxic alcohol kills 11 in Manipur.'],
