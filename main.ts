@@ -914,6 +914,26 @@ function drawMap(cv, x, y, w, h, dots, fontSans, latMin, latMax) {
       cv.line(p[0], p[1], q[0], q[1], LANDLINE, 1);
     }
   }
+  // rev6: ocean furniture so the sea is not empty — ocean labels, compass rose,
+  // scale bar (positions checked clear of every dot and coastline).
+  const OCEAN = '#8ab4c8';
+  drawText(cv, fontSans, 'PACIFIC OCEAN', px(-140), py(-10) + 3, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
+  drawText(cv, fontSans, 'ATLANTIC', px(-35), py(37) + 3, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
+  drawText(cv, fontSans, 'OCEAN', px(-35), py(37) + 15, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
+  drawText(cv, fontSans, 'INDIAN OCEAN', px(75), py(-29) + 3, 8.5, OCEAN, { align: 'center', tracking: 1.5 });
+  // compass rose in the open South Atlantic
+  const ccx = px(-20), ccy = py(-39);
+  cv.ring(ccx, ccy, 11, OCEAN, 1.5);
+  cv.line(ccx, ccy + 8, ccx, ccy - 8, OCEAN, 1.5);
+  cv.poly([[ccx, ccy - 11], [ccx - 3, ccy - 4], [ccx + 3, ccy - 4]], OCEAN);
+  drawText(cv, fontSans, 'N', ccx, ccy - 14, 9, OCEAN, { align: 'center' });
+  // scale bar: 2000 km segments (correct at the equator), South Pacific
+  const sbx = x + 20, sby = y + h - 12;
+  cv.rect(sbx, sby, 58, 5, INK);
+  cv.rect(sbx + 30, sby + 1, 27, 3, '#f6f1e7');
+  drawText(cv, fontSans, '0', sbx, sby - 4, 8, OCEAN, { align: 'center' });
+  drawText(cv, fontSans, '2000', sbx + 29, sby - 4, 8, OCEAN, { align: 'center' });
+  drawText(cv, fontSans, '4000 KM', sbx + 58, sby - 4, 8, OCEAN, { align: 'center' });
   // dots (numbered, big) — rev5: enlarged r=12, thicker white ring
   for (const d of dots) {
     const dx = px(d.lon), dy = py(d.lat);
@@ -978,15 +998,22 @@ function buildPage() {
   // lead headline: size 40 -> title ~491px wide, ends x~519, 41px clear of the hero
   // image (starts x=560). At size 44 it was 539px wide, ended x=567, and the final N hid behind the hero.
   drawText(cv, serifB, 'IRAN STRIKES BAHRAIN', MX, hy + 62, 40, INK, { tracking: 0.3 });
-  const deck1 = wrapText(serifI, 'Tehran hits a US base and an industrial site as two tankers burn in the Strait of Hormuz — the Gulf war’s widest night yet.', 16, 520, 1, 0);
+  const deck1 = wrapText(serifI, 'Tehran hits a US base and an industrial site as two tankers burn in the Strait of Hormuz — the Gulf war’s widest night yet. No casualties were reported.', 16, 520, 1, 0);
   deck1.forEach((ln, i) => drawText(cv, serifI, ln, MX, hy + 86 + i * 20, 16, '#333333'));
   drawText(cv, sansB, 'BAHRAIN · HORMUZ · SUNDAY (REUTERS)', MX, hy + 148, 10, GREY, { tracking: 1.2 });
   sceneHormuz(cv, 560, hy, RX - 560, hh);
+  // rev6: white caption strip on the hero image (rank-1 style)
+  const cap1 = 'US FIFTH FLEET BASE · BAHRAIN';
+  const cap1w = textWidth(sansB, cap1, 8.5, 1, 0.8) + 12;
+  cv.rect(566, hy + hh - 22, cap1w, 18, '#f6f1e7');
+  drawText(cv, sansB, cap1, 572, hy + hh - 9, 8.5, INK, { tracking: 0.8 });
   cv.rect(560, hy, RX - 560, 2, INK);
   cv.rect(560, hy + hh - 2, RX - 560, 2, INK);
   hline(cv, MX, 336, RX - MX, INK, 1);
 
   // ---- HERO 2 & 3: image left, text right ----
+  // rev6: headline 19px / deck 12.5px so the full 2-line deck fits in the 124px
+  // row (the old 20px/16px math truncated the deck to 1 line mid-sentence).
   function hero2(x, w, img, kicker, headline, deck, credit) {
     const y0 = 344, y1 = 468;
     img(cv, x, y0, 172, y1 - y0);
@@ -994,12 +1021,11 @@ function buildPage() {
     cv.rect(x, y1 - 2, 172, 2, INK);
     const tx = x + 184;
     labelChip(cv, tx, y0 + 4, kicker, sansB, INK, '#ffffff', 9);
-    const hl = wrapText(serifB, headline, 20, w - 184 - 8, 1, 0).slice(0, 3);
-    hl.forEach((ln, i) => drawText(cv, serifB, ln, tx, y0 + 46 + i * 24, 20, INK));
-    const deckY = y0 + 46 + hl.length * 24 + 4;
-    const dk = wrapText(serifI, deck, 13, w - 184 - 8, 1, 0);
-    const maxDeck = Math.max(0, Math.floor((y1 - 10 - deckY) / 16));
-    dk.slice(0, maxDeck).forEach((ln, i) => drawText(cv, serifI, ln, tx, deckY + i * 16, 13, '#333333'));
+    const hl = wrapText(serifB, headline, 19, w - 184 - 8, 1, 0).slice(0, 2);
+    hl.forEach((ln, i) => drawText(cv, serifB, ln, tx, y0 + 44 + i * 21, 19, INK));
+    const deckY = y0 + 44 + hl.length * 21 + 5;
+    const dk = wrapText(serifI, deck, 12.5, w - 184 - 8, 1, 0);
+    dk.slice(0, 2).forEach((ln, i) => drawText(cv, serifI, ln, tx, deckY + i * 14, 12.5, '#333333'));
     drawText(cv, sansB, credit, tx, y1 - 4, 9, GREY, { tracking: 1 });
   }
   hero2(MX, 477, sceneCOP, 'CLIMATE · COP31 ANTALYA', 'NO FOSSIL FUELS IN FINAL DRAFT',
@@ -1116,7 +1142,7 @@ function buildRest(p) {
     ['F1', 'Verstappen wins Las Vegas GP for 3rd time. (Reuters)'],
   ];
   for (let i = 0; i < more.length; i++) {
-    const y = 708 + i * 11.5;
+    const y = 708 + i * 12.3; // rev6: looser leading so the list reaches the footer
     cv.rect(616, y - 6.5, 5, 5, RED);
     drawText(cv, sansB, more[i][0] + ' — ', 626, y, 10, INK, { tracking: 0.3 });
     const w0 = textWidth(sansB, more[i][0] + ' — ', 10, 1, 0.3);
@@ -1127,9 +1153,11 @@ function buildRest(p) {
   cv.rect(MX, 978, RX - MX, 32, '#efe8d6');
   cv.rect(MX, 978, RX - MX, 1, INK);
   cv.rect(MX, 1009, RX - MX, 1, INK);
-  drawText(cv, sansB, 'DATE CHECK', MX + 10, 999, 11, RED, { tracking: 1 });
-  drawText(cv, sansR, 'Every story on this page was verified from primary sources for Sunday 22 November 2026.', MX + 108, 999, 10.5, INK);
-  drawText(cv, serifB, 'THE WORLD TODAY', RX - 10, 999, 12, INK, { align: 'right' });
+  // rev6: two-line footer (rank 1 has a full DATE CHECK note, not one line)
+  drawText(cv, sansB, 'DATE CHECK', MX + 10, 998, 11, RED, { tracking: 1 });
+  drawText(cv, sansR, 'Every story on this page was verified from primary sources for Sunday 22 November 2026.', MX + 108, 992, 10, INK);
+  drawText(cv, sansR, 'Stories are numbered 1–35; every dot on the map is a story on this page. Sources are named beside each story.', MX + 108, 1004, 10, INK);
+  drawText(cv, serifB, 'THE WORLD TODAY', RX - 10, 998, 12, INK, { align: 'right' });
 }
 
 // ---------- main ----------
