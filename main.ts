@@ -1004,9 +1004,9 @@ function buildRest(p) {
   drawText(cv, sansB, '22 MORE STORIES', 616, 694, 13, INK, { tracking: 1 });
   cv.rect(616, 700, 380, 2, RED);
   const more = [
-    ['SOMALIA', 'UAE envoy given 72 hours to leave Mogadishu.'],
-    ['MYANMAR', 'ICJ rules on Rohingya genocide case.'],
-    ['CHINA', 'Trump, Xi and Putin meet in Shenzhen.'],
+    ['SOMALIA', 'UAE envoy’s 72-hour deadline expires today.'],
+    ['UKRAINE', 'Missile strike on Kryvyi Rih kills 2, injures 83.'],
+    ['FRANCE', 'Cost-of-living protests enter sixth weekend.'],
     ['NEPAL', 'PM Balendra Shah visits India.'],
     ['SPAIN', 'Bank levy extended to 2027; €1.4bn a year.'],
     ['INDIA', 'Toxic alcohol kills 11 in Manipur.'],
