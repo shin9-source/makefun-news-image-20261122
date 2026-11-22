@@ -502,7 +502,7 @@ function wrapText(font, text, size, maxW, scaleX, tracking) {
 const INK = '#1b1b1b', PAPER = '#f6f1e7', RED = '#b3261e', REDDK = '#8c1d17';
 const BLUE = '#1d4e6b', BLUELT = '#2a6a8a', SKY = '#cfe0e8', SAND = '#e7dcc3';
 const GOLD = '#c08a2d', ORANGE = '#e07b2a', GREEN = '#3f6b3a', GREY = '#6b6b6b';
-const SEA = '#cdd9dd', LAND = '#ddd2b8', LANDLINE = '#8a7d5f';
+const SEA = '#22405c', LAND = '#d9c9a0', LANDLINE = '#b09a68'; // rev5: deep navy sea, warm sand land
 
 // ---------- small drawing helpers ----------
 function hline(cv, x, y, w, hex, t) { cv.rect(x, y, w, t || 1, hex); }
@@ -558,41 +558,95 @@ function buildingRow(cv, x, y, w, h, seed, col) {
   }
 }
 
+// curved missile trail: quadratic bezier drawn as a polyline
+function arc(cv, x0, y0, cx, cy, x1, y1, col, width) {
+  let px = x0, py = y0;
+  for (let s = 1; s <= 16; s++) {
+    const t = s / 16;
+    const qx = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * cx + t * t * x1;
+    const qy = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * cy + t * t * y1;
+    cv.line(px, py, qx, qy, col, width);
+    px = qx; py = qy;
+  }
+}
+// impact burst: white core, amber ring, radiating sparks
+function burst(cv, cx, cy, r) {
+  cv.circle(cx, cy, r, '#ffffff');
+  cv.circle(cx, cy, r * 0.55, '#f7c948');
+  cv.ring(cx, cy, r * 1.6, '#f7c948', 1.5);
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4;
+    cv.line(cx + Math.cos(a) * r * 1.4, cy + Math.sin(a) * r * 1.4,
+      cx + Math.cos(a) * r * 2.4, cy + Math.sin(a) * r * 2.4, '#f7c948', 1.5);
+  }
+}
+
 // ---------- hero / medium scenes (each draws inside x,y,w,h) ----------
+// rev5: Iran lead hero redrawn as a detailed missile-attack scene — layered dusk
+// sky, Bahrain skyline + twin sail towers + refinery, curved missile arcs with
+// impact bursts, two burning tankers with fire-glow on the water, warship escort.
 function sceneHormuz(cv, x, y, w, h) {
-  // dusk sky over the Strait of Hormuz
-  cv.rect(x, y, w, h, '#2a3a4a');
-  cv.rect(x, y, w, h * 0.42, '#e8963c');
-  cv.rect(x, y, w, h * 0.28, '#c96a2e');
-  cv.circle(x + w * 0.78, y + h * 0.2, 13, '#f7e3a1');
-  // Bahrain skyline silhouette
-  cv.rect(x + w * 0.02, y + h * 0.34, w, h * 0.1, '#1b1b1b');
-  buildingRow(cv, x + w * 0.03, y + h * 0.16, w * 0.4, h * 0.28, 11, '#1b1b1b');
+  // dusk sky: dark slate, wide orange sunset band, bright horizon glow
+  cv.rect(x, y, w, h, '#232f3d');
+  cv.rect(x, y + h * 0.16, w, h * 0.3, '#c96a2e');
+  cv.rect(x, y + h * 0.36, w, h * 0.12, '#f2a541');
+  // sun + halo, faint stars in the dark upper sky
+  cv.circle(x + w * 0.84, y + h * 0.2, 11, '#f7e3a1');
+  cv.ring(x + w * 0.84, y + h * 0.2, 16, '#f7c948', 1.5);
+  for (const [sx, sy] of [[0.12, 0.08], [0.3, 0.05], [0.55, 0.09], [0.7, 0.06], [0.95, 0.1]])
+    cv.circle(x + w * sx, y + h * sy, 1.5, '#f7e3a1');
+  // Bahrain skyline (left) + twin sail towers + refinery / industrial site (right)
+  buildingRow(cv, x + w * 0.02, y + h * 0.3, w * 0.42, h * 0.18, 11, '#141414');
+  cv.poly([[x + w * 0.46, y + h * 0.48], [x + w * 0.48, y + h * 0.26], [x + w * 0.5, y + h * 0.48]], '#141414');
+  cv.poly([[x + w * 0.51, y + h * 0.48], [x + w * 0.53, y + h * 0.28], [x + w * 0.55, y + h * 0.48]], '#141414');
+  cv.rect(x + w * 0.78, y + h * 0.3, w * 0.02, h * 0.18, '#141414');
+  cv.rect(x + w * 0.83, y + h * 0.26, w * 0.02, h * 0.22, '#141414');
+  cv.circle(x + w * 0.9, y + h * 0.42, h * 0.06, '#141414');
+  cv.circle(x + w * 0.95, y + h * 0.44, h * 0.05, '#141414');
+  cv.rect(x, y + h * 0.46, w, h * 0.02, '#141414');
   // sea
-  cv.rect(x, y + h * 0.44, w, h * 0.56, '#17394f');
-  cv.rect(x, y + h * 0.44, w, h * 0.56, '#1d4e6b');
-  waves(cv, x + 6, y + h * 0.5, w - 12, h * 0.45, '#7fb3c8', 21);
-  // tanker 1 (burning)
-  const tx = x + w * 0.08, ty = y + h * 0.52, tw = w * 0.42, th = h * 0.16;
+  cv.rect(x, y + h * 0.48, w, h * 0.52, '#14324a');
+  cv.rect(x, y + h * 0.48, w, h * 0.1, '#1d4e6b');
+  waves(cv, x + 6, y + h * 0.56, w - 12, h * 0.4, '#7fb3c8', 21);
+  // missile arcs (amber glow, then bright core), from high in the sky to targets
+  const arcs = [
+    [0.04, 0.04, 0.18, 0.1, 0.28, 0.52],
+    [0.3, 0.02, 0.55, 0.12, 0.82, 0.44],
+    [0.62, 0.03, 0.68, 0.25, 0.72, 0.6],
+  ];
+  for (const [x0, y0, cx, cy, x1, y1] of arcs) {
+    arc(cv, x + w * x0, y + h * y0, x + w * cx, y + h * cy, x + w * x1, y + h * y1, '#f7c948', 3);
+    arc(cv, x + w * x0, y + h * y0, x + w * cx, y + h * cy, x + w * x1, y + h * y1, '#ffffff', 1.5);
+    cv.circle(x + w * x0, y + h * y0, 2.5, '#ffffff');
+  }
+  // tanker 1 (burning, left-centre): fire-glow on the water, hull, deck, smoke, flame
+  const tx = x + w * 0.05, ty = y + h * 0.6, tw = w * 0.44, th = h * 0.14;
+  cv.poly([[tx - 6, ty + th + 2], [tx + tw + 6, ty + th + 2], [tx + tw - 12, ty + th + 10], [tx + 8, ty + th + 10]], '#e07b2a', 0.35);
   cv.poly([[tx, ty + th], [tx + tw * 0.06, ty], [tx + tw * 0.94, ty], [tx + tw, ty + th]], '#0f0f0f');
-  cv.rect(tx + tw * 0.1, ty - h * 0.1, tw * 0.5, h * 0.1, '#333333');
-  cv.rect(tx + tw * 0.62, ty - h * 0.16, tw * 0.08, h * 0.16, '#222222');
-  smoke(cv, tx + tw * 0.2, ty - h * 0.5, tw * 0.4, h * 0.4, 41, true);
-  flame(cv, tx + tw * 0.15, ty - h * 0.42, tw * 0.5, h * 0.42, 31);
-  // tanker 2 (hit, listing)
-  const ux = x + w * 0.58, uy = y + h * 0.6, uw = w * 0.36, uh = h * 0.13;
+  cv.rect(tx + tw * 0.1, ty - h * 0.08, tw * 0.5, h * 0.08, '#333333');
+  cv.rect(tx + tw * 0.62, ty - h * 0.14, tw * 0.08, h * 0.14, '#222222');
+  smoke(cv, tx + tw * 0.18, ty - h * 0.48, tw * 0.4, h * 0.38, 41, true);
+  flame(cv, tx + tw * 0.12, ty - h * 0.4, tw * 0.5, h * 0.4, 31);
+  // tanker 2 (hit, listing, right): smaller fire, glow, smoke
+  const ux = x + w * 0.58, uy = y + h * 0.64, uw = w * 0.34, uh = h * 0.12;
+  cv.poly([[ux - 4, uy + uh + 2], [ux + uw + 4, uy + uh + 2], [ux + uw - 8, uy + uh + 8], [ux + 6, uy + uh + 8]], '#e07b2a', 0.3);
   cv.poly([[ux, uy + uh], [ux + uw * 0.05, uy], [ux + uw * 0.9, uy + uh * 0.4], [ux + uw, uy + uh]], '#141414');
-  smoke(cv, ux + uw * 0.15, uy - h * 0.38, uw * 0.35, h * 0.3, 61, true);
-  flame(cv, ux + uw * 0.1, uy - h * 0.3, uw * 0.45, h * 0.3, 51);
-  // missile arcs
-  cv.line(x + w * 0.05, y + h * 0.05, x + w * 0.35, y + h * 0.42, '#f7c948', 2);
-  cv.line(x + w * 0.2, y + h * 0.02, x + w * 0.5, y + h * 0.4, '#ffffff', 1.5);
-  cv.circle(x + w * 0.35, y + h * 0.42, 4, '#ffffff');
-  cv.circle(x + w * 0.5, y + h * 0.4, 3, '#f7c948');
-  // warship escort
-  cv.poly([[x + w * 0.86, y + h * 0.86], [x + w * 0.9, y + h * 0.78], [x + w * 0.98, y + h * 0.78], [x + w * 0.99, y + h * 0.86]], '#222222');
-  cv.rect(x + w * 0.9, y + h * 0.72, w * 0.03, h * 0.06, '#222222');
-  cv.line(x + w * 0.86, y + h * 0.88, x + w * 0.99, y + h * 0.88, '#7fb3c8', 1);
+  smoke(cv, ux + uw * 0.12, uy - h * 0.36, uw * 0.35, h * 0.28, 61, true);
+  flame(cv, ux + uw * 0.08, uy - h * 0.28, uw * 0.45, h * 0.28, 51);
+  // warship escort (bottom-right) + wake
+  cv.poly([[x + w * 0.88, y + h * 0.88], [x + w * 0.91, y + h * 0.8], [x + w * 0.97, y + h * 0.8], [x + w * 0.99, y + h * 0.88]], '#222222');
+  cv.rect(x + w * 0.92, y + h * 0.74, w * 0.025, h * 0.06, '#222222');
+  cv.line(x + w * 0.88, y + h * 0.9, x + w * 0.99, y + h * 0.9, '#7fb3c8', 1);
+  // impact bursts on top of the flames
+  burst(cv, x + w * 0.28, y + h * 0.52, 5);
+  burst(cv, x + w * 0.82, y + h * 0.44, 5);
+  burst(cv, x + w * 0.72, y + h * 0.6, 4);
+  // embers drifting off the fires
+  const er = rng(77);
+  for (let i = 0; i < 7; i++) {
+    const ex = x + w * (0.1 + 0.55 * er()), ey = y + h * (0.22 + 0.25 * er());
+    cv.circle(ex, ey, 1.5 + er(), i % 2 ? '#f7c948' : '#e07b2a');
+  }
 }
 function sceneCOP(cv, x, y, w, h) {
   cv.rect(x, y, w, h, '#274b63');
@@ -843,11 +897,12 @@ function drawMap(cv, x, y, w, h, dots, fontSans, latMin, latMax) {
   // graticule
   for (let lon = -150; lon <= 150; lon += 30) {
     const gx = px(lon);
-    cv.line(gx, y, gx, y + h, '#b8c8cc', 0.75);
+    cv.line(gx, y, gx, y + h, '#33536e', 0.75);
   }
   for (let lat = -60; lat <= 60; lat += 30) {
     const gy = py(lat);
-    cv.line(x, gy, x + w, gy, '#b8c8cc', 0.75);
+    if (gy < y || gy > y + h) continue; // rev5: keep graticule inside the map box
+    cv.line(x, gy, x + w, gy, '#33536e', 0.75);
   }
   // continents
   for (const cont of CONTINENTS) {
@@ -859,12 +914,12 @@ function drawMap(cv, x, y, w, h, dots, fontSans, latMin, latMax) {
       cv.line(p[0], p[1], q[0], q[1], LANDLINE, 1);
     }
   }
-  // dots (numbered, big)
+  // dots (numbered, big) — rev5: enlarged r=12, thicker white ring
   for (const d of dots) {
     const dx = px(d.lon), dy = py(d.lat);
-    cv.circle(dx, dy, 11, RED);
-    cv.ring(dx, dy, 11, '#ffffff', 1.5);
-    drawText(cv, fontSans, String(d.n), dx, dy + 3.5, 11, '#ffffff', { align: 'center' });
+    cv.circle(dx, dy, 12, RED);
+    cv.ring(dx, dy, 12, '#ffffff', 2);
+    drawText(cv, fontSans, String(d.n), dx, dy + 4, 12, '#ffffff', { align: 'center' });
   }
 }
 
@@ -986,25 +1041,56 @@ function buildRest(p) {
   }
   hline(cv, MX, 672, RX - MX, INK, 1);
 
-  // ---- map (left) ----
-  drawText(cv, sansB, 'THE WORLD IN ONE DAY', MX, 694, 13, INK, { tracking: 1 });
-  drawText(cv, sansB, '22 NOV 2026 · 35 STORIES, 7 REGIONS', 600, 694, 10, GREY, { align: 'right', tracking: 0.8 });
-  const dots = [
-    { n: 1, lon: 50.5, lat: 26.2 }, { n: 2, lon: 30.7, lat: 36.9 }, { n: 3, lon: 106.3, lat: -6.4 },
-    { n: 4, lon: 46.7, lat: 24.6 }, { n: 5, lon: 25, lat: 60 }, { n: 6, lon: 19, lat: 52 },
-    { n: 7, lon: 6.3, lat: 4.9 }, { n: 8, lon: -107, lat: 25 }, { n: 9, lon: 47.8, lat: 30.5 },
-    { n: 10, lon: -81.5, lat: 28.5 }, { n: 11, lon: -75.2, lat: -11.2 }, { n: 12, lon: 6.1, lat: 46.2 },
-    { n: 13, lon: 116.4, lat: 39.9 }, { n: 14, lon: 34.5, lat: 31.5 },
+  // ---- map (left) ---- rev5: region bar + darker map + 29 dots
+  drawText(cv, sansB, 'THE WORLD IN ONE DAY', MX, 686, 13, INK, { tracking: 1 });
+  drawText(cv, sansB, '22 NOV 2026 · 35 STORIES, 7 REGIONS', 600, 686, 10, GREY, { align: 'right', tracking: 0.8 });
+  // region bar: counts from our own 35 stories (COP31 counted as Global)
+  const regions = [
+    ['EUROPE', 9, '#2a6a8a'], ['ASIA', 10, '#b3261e'], ['MIDDLE EAST', 4, '#c08a2d'],
+    ['AFRICA', 2, '#3f6b3a'], ['AMERICAS', 7, '#7a3a6b'], ['OCEANIA', 2, '#1d7a6b'], ['GLOBAL', 1, '#5a5a5a'],
   ];
-  drawMap(cv, MX, 702, 572, 222, dots, sansB, -58, 82);
-  cv.rect(MX, 702, 572, 2, INK);
-  cv.rect(MX, 924, 572, 2, INK);
-  drawText(cv, sansR, 'Every numbered dot is a story on this page — 1 Bahrain, 2 Antalya, 3 Banten, 4 Riyadh,', MX, 940, 10, '#444444');
-  drawText(cv, sansR, '5 Gulf of Finland, 6 Poland, 7 Bayelsa, 8 Sinaloa, 9 Basra, 10 Florida, 11 Junín, 12 Geneva, 13 Beijing, 14 Gaza.', MX, 954, 10, '#444444');
+  let bx = MX;
+  for (let i = 0; i < regions.length; i++) {
+    const x1 = i === regions.length - 1 ? MX + 572
+      : MX + Math.round(572 * regions.slice(0, i + 1).reduce((s, r) => s + r[1], 0) / 35);
+    cv.rect(bx, 694, x1 - bx, 10, regions[i][2]);
+    bx = x1;
+  }
+  // region labels, centred under the bar (swatch + NAME n)
+  const rlabels = regions.map(([name, n]) => name + ' ' + n);
+  let rtot = 0;
+  for (const t of rlabels) rtot += 8 + 4 + textWidth(sansB, t, 8.5, 1, 0.8) + 12;
+  let lx = MX + (572 - rtot) / 2;
+  for (let i = 0; i < regions.length; i++) {
+    cv.rect(lx, 709, 8, 8, regions[i][2]);
+    drawText(cv, sansB, rlabels[i], lx + 12, 716, 8.5, INK, { tracking: 0.8 });
+    lx += 8 + 4 + textWidth(sansB, rlabels[i], 8.5, 1, 0.8) + 12;
+  }
+  const dots = [
+    // rev5: Gulf / Europe / Bengal / SE-Asia dots nudged a few degrees so every
+    // number stays readable; Korea is one dot (Seoul) — Pyongyang is 2.8px away
+    // on this scale and would hide it. Peru is already dot 11 (Junín).
+    { n: 1, lon: 56, lat: 26 }, { n: 2, lon: 28, lat: 39 }, { n: 3, lon: 106.3, lat: -6.4 },
+    { n: 4, lon: 43, lat: 21 }, { n: 5, lon: 25, lat: 63 }, { n: 6, lon: 22, lat: 52 },
+    { n: 7, lon: 6.3, lat: 4.9 }, { n: 8, lon: -107, lat: 25 }, { n: 9, lon: 48, lat: 33 },
+    { n: 10, lon: -81.5, lat: 28.5 }, { n: 11, lon: -75.2, lat: -11.2 }, { n: 12, lon: 6.1, lat: 44 },
+    { n: 13, lon: 116.4, lat: 39.9 }, { n: 14, lon: 34.5, lat: 31.5 },
+    { n: 15, lon: 45.3, lat: 2.0 }, { n: 16, lon: 33, lat: 50 }, { n: 17, lon: 127.0, lat: 37.5 },
+    { n: 18, lon: 81, lat: 30 }, { n: 19, lon: -7, lat: 38 }, { n: 20, lon: 93.9, lat: 24.7 },
+    { n: 21, lon: 11, lat: 52.5 }, { n: 22, lon: 149.1, lat: -35.3 }, { n: 23, lon: 98, lat: 14 },
+    { n: 24, lon: 106, lat: 10 }, { n: 25, lon: 86, lat: 21 }, { n: 26, lon: 19.8, lat: 41.3 },
+    { n: 27, lon: -122.3, lat: 47.6 }, { n: 28, lon: -115.1, lat: 36.2 },
+  ];
+  drawMap(cv, MX, 720, 572, 208, dots, sansB, -55, 76);
+  cv.rect(MX, 720, 572, 2, INK);
+  cv.rect(MX, 928, 572, 2, INK);
+  drawText(cv, sansR, 'Every dot is a story — 1 Bahrain, 2 Antalya, 3 Banten, 4 Riyadh, 5 Finland, 6 Poland, 7 Bayelsa, 8 Sinaloa, 9 Basra,', MX, 940, 9, '#444444');
+  drawText(cv, sansR, '10 Florida, 11 Junín, 12 Geneva, 13 Beijing, 14 Gaza, 15 Mogadishu, 16 Kyiv, 17 Seoul, 18 Kathmandu, 19 Madrid,', MX, 953, 9, '#444444');
+  drawText(cv, sansR, '20 Manipur, 21 Berlin, 22 Canberra, 23 Yangon, 24 Bangkok, 25 Dhaka, 26 Tirana, 27 Seattle, 28 Vegas.', MX, 966, 9, '#444444');
 
   // ---- 22 MORE STORIES (right column) ----
-  drawText(cv, sansB, '22 MORE STORIES', 616, 694, 13, INK, { tracking: 1 });
-  cv.rect(616, 700, 380, 2, RED);
+  drawText(cv, sansB, '22 MORE STORIES', 616, 686, 13, INK, { tracking: 1 });
+  cv.rect(616, 692, 380, 2, RED);
   const more = [
     ['SOMALIA', 'UAE envoy’s 72-hour deadline expires today.'],
     ['UKRAINE', 'Missile strike on Kryvyi Rih kills 2, injures 83. (AP)'],
@@ -1030,7 +1116,7 @@ function buildRest(p) {
     ['F1', 'Verstappen wins Las Vegas GP for 3rd time. (Reuters)'],
   ];
   for (let i = 0; i < more.length; i++) {
-    const y = 714 + i * 11.5;
+    const y = 708 + i * 11.5;
     cv.rect(616, y - 6.5, 5, 5, RED);
     drawText(cv, sansB, more[i][0] + ' — ', 626, y, 10, INK, { tracking: 0.3 });
     const w0 = textWidth(sansB, more[i][0] + ' — ', 10, 1, 0.3);
