@@ -935,10 +935,15 @@ function drawMap(cv, x, y, w, h, dots, fontSans, latMin, latMax) {
   drawText(cv, fontSans, '2000', sbx + 29, sby - 4, 8, OCEAN, { align: 'center' });
   drawText(cv, fontSans, '4000 KM', sbx + 58, sby - 4, 8, OCEAN, { align: 'center' });
   // dots (numbered, big) — rev5: enlarged r=12, thicker white ring
+  // rev7: draw all circles first, then all numbers last, so no dot's circle
+  // ever covers another dot's number (the Europe/Gulf clusters are dense).
   for (const d of dots) {
     const dx = px(d.lon), dy = py(d.lat);
     cv.circle(dx, dy, 12, RED);
     cv.ring(dx, dy, 12, '#ffffff', 2);
+  }
+  for (const d of dots) {
+    const dx = px(d.lon), dy = py(d.lat);
     drawText(cv, fontSans, String(d.n), dx, dy + 4, 12, '#ffffff', { align: 'center' });
   }
 }
@@ -969,7 +974,7 @@ function buildPage() {
   drawText(cv, serifB, 'THE WORLD TODAY', W / 2, 76, 64, INK, { align: 'center', tracking: 0.5 });
   drawText(cv, sansB, 'SUNDAY, 22 NOVEMBER 2026', MX, 94, 12, INK, { tracking: 1.5 });
   drawText(cv, sansB, 'No. 326', W / 2, 94, 12, INK, { align: 'center', tracking: 1.5 });
-  drawText(cv, sansB, '35 STORIES · 7 REGIONS', RX, 94, 12, INK, { align: 'right', tracking: 1.5 });
+  drawText(cv, sansB, '42 STORIES · 7 REGIONS', RX, 94, 12, INK, { align: 'right', tracking: 1.5 });
   cv.rect(MX, 100, RX - MX, 3, RED);
 
   // ---- stat strip: 6 numbers ----
@@ -992,47 +997,63 @@ function buildPage() {
   }
   hline(cv, MX, 168, RX - MX, INK, 1);
 
-  // ---- HERO 1: Iran strikes Bahrain (lead) ----
-  const hy = 176, hh = 152;
-  labelChip(cv, MX, hy + 6, 'MIDDLE EAST · WAR SPREADS', sansB, RED, '#ffffff', 11);
-  // lead headline: size 40 -> title ~491px wide, ends x~519, 41px clear of the hero
-  // image (starts x=560). At size 44 it was 539px wide, ended x=567, and the final N hid behind the hero.
-  drawText(cv, serifB, 'IRAN STRIKES BAHRAIN', MX, hy + 62, 40, INK, { tracking: 0.3 });
-  const deck1 = wrapText(serifI, 'Tehran hits a US base and an industrial site as two tankers burn in the Strait of Hormuz — the Gulf war’s widest night yet. No casualties were reported.', 16, 520, 1, 0);
-  deck1.forEach((ln, i) => drawText(cv, serifI, ln, MX, hy + 86 + i * 20, 16, '#333333'));
-  drawText(cv, sansB, 'BAHRAIN · HORMUZ · SUNDAY (REUTERS)', MX, hy + 148, 10, GREY, { tracking: 1.2 });
-  sceneHormuz(cv, 560, hy, RX - 560, hh);
-  // rev6: white caption strip on the hero image (rank-1 style)
-  const cap1 = 'US FIFTH FLEET BASE · BAHRAIN';
-  const cap1w = textWidth(sansB, cap1, 8.5, 1, 0.8) + 12;
-  cv.rect(566, hy + hh - 22, cap1w, 18, '#f6f1e7');
-  drawText(cv, sansB, cap1, 572, hy + hh - 9, 8.5, INK, { tracking: 0.8 });
-  cv.rect(560, hy, RX - 560, 2, INK);
-  cv.rect(560, hy + hh - 2, RX - 560, 2, INK);
-  hline(cv, MX, 336, RX - MX, INK, 1);
-
-  // ---- HERO 2 & 3: image left, text right ----
-  // rev6: headline 19px / deck 12.5px so the full 2-line deck fits in the 124px
-  // row (the old 20px/16px math truncated the deck to 1 line mid-sentence).
-  function hero2(x, w, img, kicker, headline, deck, credit) {
-    const y0 = 344, y1 = 468;
-    img(cv, x, y0, 172, y1 - y0);
-    cv.rect(x, y0, 172, 2, INK);
-    cv.rect(x, y1 - 2, 172, 2, INK);
-    const tx = x + 184;
-    labelChip(cv, tx, y0 + 4, kicker, sansB, INK, '#ffffff', 9);
-    const hl = wrapText(serifB, headline, 19, w - 184 - 8, 1, 0).slice(0, 2);
-    hl.forEach((ln, i) => drawText(cv, serifB, ln, tx, y0 + 44 + i * 21, 19, INK));
-    const deckY = y0 + 44 + hl.length * 21 + 5;
-    const dk = wrapText(serifI, deck, 12.5, w - 184 - 8, 1, 0);
-    dk.slice(0, 2).forEach((ln, i) => drawText(cv, serifI, ln, tx, deckY + i * 14, 12.5, '#333333'));
-    drawText(cv, sansB, credit, tx, y1 - 4, 9, GREY, { tracking: 1 });
+  // ---- region bar (rev7, rank-1 style: full-width, directly under the stat strip) ----
+  // recount for 42 stories: EUROPE 11, ASIA 11, MIDDLE EAST 7, AFRICA 3, AMERICAS 7, OCEANIA 2, GLOBAL 1
+  const regions = [
+    ['EUROPE', 11, '#2a6a8a'], ['ASIA', 11, '#b3261e'], ['MIDDLE EAST', 7, '#c08a2d'],
+    ['AFRICA', 3, '#3f6b3a'], ['AMERICAS', 7, '#7a3a6b'], ['OCEANIA', 2, '#1d7a6b'], ['GLOBAL', 1, '#5a5a5a'],
+  ];
+  let bx = MX;
+  for (let i = 0; i < regions.length; i++) {
+    const x1 = i === regions.length - 1 ? RX
+      : MX + Math.round((RX - MX) * regions.slice(0, i + 1).reduce((s, r) => s + r[1], 0) / 42);
+    cv.rect(bx, 174, x1 - bx, 12, regions[i][2]);
+    bx = x1;
   }
-  hero2(MX, 477, sceneCOP, 'CLIMATE · COP31 ANTALYA', 'NO FOSSIL FUELS IN FINAL DRAFT',
-    'The summit’s dawn draft drops the words entirely and bets on clean power.', 'ANTALYA · SUNDAY (AP)');
-  hero2(519, 477, sceneFactory, 'ASIA · DISASTER', '36 MISSING AFTER FACTORY FIRE',
-    'A candy plant burns in Cikande, Banten; three confirmed dead.', 'BANTEN · SUNDAY (REUTERS)');
-  hline(cv, MX, 476, RX - MX, INK, 1);
+  // region labels, centred under the bar (swatch + NAME n)
+  const rlabels = regions.map(([name, n]) => name + ' ' + n);
+  let rtot = 0;
+  for (const t of rlabels) rtot += 8 + 4 + textWidth(sansB, t, 8.5, 1, 0.8) + 12;
+  let lx = MX + ((RX - MX) - rtot) / 2;
+  for (let i = 0; i < regions.length; i++) {
+    cv.rect(lx, 191, 8, 8, regions[i][2]);
+    drawText(cv, sansB, rlabels[i], lx + 12, 198, 8.5, INK, { tracking: 0.8 });
+    lx += 8 + 4 + textWidth(sansB, rlabels[i], 8.5, 1, 0.8) + 12;
+  }
+
+  // ---- HEROES: 3 equal cards, rank-1 style (banner + image + caption + location + headline + deck) ----
+  // rev7: the old 1-lead + 2-small-heroes layout is replaced by 3 cards side by side,
+  // same width, same structure. Story texts are unchanged from rev6.
+  function heroCard(x, w, img, banner, caption, credit, headline, deck) {
+    const y0 = 206;
+    cv.rect(x, y0, w, 16, RED);
+    drawText(cv, sansB, banner, x + 6, y0 + 12, 9.5, '#ffffff', { tracking: 1 });
+    img(cv, x, y0 + 16, w, 104);
+    cv.rect(x, y0 + 16, w, 2, INK);
+    cv.rect(x, y0 + 118, w, 2, INK);
+    // white caption strip on the image (bottom-left), rank-1 style
+    const capw = textWidth(sansB, caption, 8, 1, 0.8) + 12;
+    cv.rect(x + 6, y0 + 104, capw, 16, '#f6f1e7');
+    drawText(cv, sansB, caption, x + 12, y0 + 115, 8, INK, { tracking: 0.8 });
+    drawText(cv, sansB, credit, x, y0 + 136, 9, GREY, { tracking: 1 });
+    const hl = wrapText(serifB, headline, 19, w - 8, 1, 0).slice(0, 2);
+    hl.forEach((ln, i) => drawText(cv, serifB, ln, x, y0 + 154 + i * 21, 19, INK));
+    const dk = wrapText(serifI, deck, 12.5, w - 8, 1, 0);
+    dk.slice(0, 3).forEach((ln, i) => drawText(cv, serifI, ln, x, y0 + 191 + i * 13, 12.5, '#333333'));
+  }
+  const hw = 317;
+  heroCard(MX, hw, sceneHormuz, 'MIDDLE EAST · WAR SPREADS', 'US FIFTH FLEET BASE · BAHRAIN',
+    'BAHRAIN · HORMUZ · SUNDAY (REUTERS)', 'IRAN STRIKES BAHRAIN',
+    'Tehran hits a US base and an industrial site as two tankers burn in the Strait of Hormuz — the Gulf war’s widest night yet. No casualties were reported.');
+  heroCard(MX + hw + 8, 318, sceneCOP, 'CLIMATE · COP31 ANTALYA', 'COP31 SUMMIT · ANTALYA',
+    'ANTALYA · SUNDAY (AP)', 'NO FOSSIL FUELS IN FINAL DRAFT',
+    'The summit’s dawn draft drops the words entirely and bets on clean power.');
+  heroCard(MX + hw + 8 + 318 + 8, hw, sceneFactory, 'ASIA · DISASTER', 'CANDY PLANT · CIKANDE, BANTEN',
+    'BANTEN · SUNDAY (REUTERS)', '36 MISSING AFTER FACTORY FIRE',
+    'A candy plant burns in Cikande, Banten; three confirmed dead.');
+  hline(cv, MX, 436, RX - MX, INK, 1);
+
+  // rev7: heroes are now the 3 equal cards above (hero2 layout removed).
 
   return { cv, serifB, serifI, sansR, sansB };
 }
@@ -1056,42 +1077,21 @@ function buildRest(p) {
   const cw = 187, cg = 8, rh = 90;
   for (let i = 0; i < 10; i++) {
     const col = i % 5, row = Math.floor(i / 5);
-    const x = MX + col * (cw + cg), y = 484 + row * (rh + 8);
+    const x = MX + col * (cw + cg), y = 444 + row * (rh + 8);
     const m = mediums[i];
     m[3](cv, x, y, cw, 36);
-    cv.rect(x, y + 36, cw, 1, INK);
-    drawText(cv, sansB, m[0], x, y + 48, 9, RED, { tracking: 1 });
+    // rev7: rank-1 style coloured banner with the location in white (was small caps)
+    cv.rect(x, y + 36, cw, 14, RED);
+    drawText(cv, sansB, m[0], x + 4, y + 47, 8.5, '#ffffff', { tracking: 1 });
     const hl = wrapText(serifB, m[1], 12, cw, 1, 0);
     hl.slice(0, 2).forEach((ln, k) => drawText(cv, serifB, ln, x, y + 63 + k * 14, 12, INK));
     drawText(cv, sansR, m[2], x, y + 88, 9.5, '#444444');
   }
-  hline(cv, MX, 672, RX - MX, INK, 1);
+  hline(cv, MX, 640, RX - MX, INK, 1);
 
-  // ---- map (left) ---- rev5: region bar + darker map + 29 dots
-  drawText(cv, sansB, 'THE WORLD IN ONE DAY', MX, 686, 13, INK, { tracking: 1 });
-  drawText(cv, sansB, '22 NOV 2026 · 35 STORIES, 7 REGIONS', 600, 686, 10, GREY, { align: 'right', tracking: 0.8 });
-  // region bar: counts from our own 35 stories (COP31 counted as Global)
-  const regions = [
-    ['EUROPE', 9, '#2a6a8a'], ['ASIA', 10, '#b3261e'], ['MIDDLE EAST', 4, '#c08a2d'],
-    ['AFRICA', 2, '#3f6b3a'], ['AMERICAS', 7, '#7a3a6b'], ['OCEANIA', 2, '#1d7a6b'], ['GLOBAL', 1, '#5a5a5a'],
-  ];
-  let bx = MX;
-  for (let i = 0; i < regions.length; i++) {
-    const x1 = i === regions.length - 1 ? MX + 572
-      : MX + Math.round(572 * regions.slice(0, i + 1).reduce((s, r) => s + r[1], 0) / 35);
-    cv.rect(bx, 694, x1 - bx, 10, regions[i][2]);
-    bx = x1;
-  }
-  // region labels, centred under the bar (swatch + NAME n)
-  const rlabels = regions.map(([name, n]) => name + ' ' + n);
-  let rtot = 0;
-  for (const t of rlabels) rtot += 8 + 4 + textWidth(sansB, t, 8.5, 1, 0.8) + 12;
-  let lx = MX + (572 - rtot) / 2;
-  for (let i = 0; i < regions.length; i++) {
-    cv.rect(lx, 709, 8, 8, regions[i][2]);
-    drawText(cv, sansB, rlabels[i], lx + 12, 716, 8.5, INK, { tracking: 0.8 });
-    lx += 8 + 4 + textWidth(sansB, rlabels[i], 8.5, 1, 0.8) + 12;
-  }
+  // ---- map (left) ---- rev7: region bar moved to the top (under the stat strip)
+  drawText(cv, sansB, 'THE WORLD IN ONE DAY', MX, 660, 13, INK, { tracking: 1 });
+  drawText(cv, sansB, '22 NOV 2026 · 42 STORIES, 7 REGIONS', 600, 660, 10, GREY, { align: 'right', tracking: 0.8 });
   const dots = [
     // rev5: Gulf / Europe / Bengal / SE-Asia dots nudged a few degrees so every
     // number stays readable; Korea is one dot (Seoul) — Pyongyang is 2.8px away
@@ -1106,17 +1106,28 @@ function buildRest(p) {
     { n: 21, lon: 11, lat: 52.5 }, { n: 22, lon: 149.1, lat: -35.3 }, { n: 23, lon: 98, lat: 14 },
     { n: 24, lon: 106, lat: 10 }, { n: 25, lon: 86, lat: 21 }, { n: 26, lon: 19.8, lat: 41.3 },
     { n: 27, lon: -122.3, lat: 47.6 }, { n: 28, lon: -115.1, lat: 36.2 },
+    // rev7: 4 new dots (29-32). Tehran nudged east to (60,38) and Rome to (12,37)
+    // so the numbers stay readable against Basra/Bahrain and Geneva/Tirana/Berlin.
+    // Gulf bourses shares dot 1 (Bahrain), EU-Indonesia shares dot 3 (Jakarta),
+    // Eisenkot shares dot 14 (Gaza/Jerusalem) — those cities sit within a few px
+    // of an existing dot at this scale, so a separate dot would be unreadable.
+    { n: 29, lon: 28.0, lat: -26.2 }, { n: 30, lon: 60, lat: 38 },
+    { n: 31, lon: -1.55, lat: 53.8 }, { n: 32, lon: 12, lat: 37 },
   ];
-  drawMap(cv, MX, 720, 572, 208, dots, sansB, -55, 76);
-  cv.rect(MX, 720, 572, 2, INK);
-  cv.rect(MX, 928, 572, 2, INK);
-  drawText(cv, sansR, 'Every dot is a story — 1 Bahrain, 2 Antalya, 3 Banten, 4 Riyadh, 5 Finland, 6 Poland, 7 Bayelsa, 8 Sinaloa, 9 Basra,', MX, 940, 9, '#444444');
-  drawText(cv, sansR, '10 Florida, 11 Junín, 12 Geneva, 13 Beijing, 14 Gaza, 15 Mogadishu, 16 Kyiv, 17 Seoul, 18 Kathmandu, 19 Madrid,', MX, 953, 9, '#444444');
-  drawText(cv, sansR, '20 Manipur, 21 Berlin, 22 Canberra, 23 Yangon, 24 Bangkok, 25 Dhaka, 26 Tirana, 27 Seattle, 28 Vegas.', MX, 966, 9, '#444444');
+  drawMap(cv, MX, 668, 572, 220, dots, sansB, -55, 76);
+  cv.rect(MX, 668, 572, 2, INK);
+  cv.rect(MX, 886, 572, 2, INK);
+  // rev7: 32-dot legend in 5 lines; dot 3 covers Banten+Jakarta, dot 14 Gaza+Jerusalem
+  drawText(cv, sansR, '1 Bahrain, 2 Antalya, 3 Banten · Jakarta, 4 Riyadh, 5 Finland, 6 Poland, 7 Bayelsa,', MX, 894, 9, '#444444');
+  drawText(cv, sansR, '8 Sinaloa, 9 Basra, 10 Florida, 11 Junín, 12 Geneva, 13 Beijing, 14 Gaza · Jerusalem,', MX, 906, 9, '#444444');
+  drawText(cv, sansR, '15 Mogadishu, 16 Kyiv, 17 Seoul, 18 Kathmandu, 19 Madrid, 20 Manipur, 21 Berlin,', MX, 918, 9, '#444444');
+  drawText(cv, sansR, '22 Canberra, 23 Yangon, 24 Bangkok, 25 Dhaka, 26 Tirana, 27 Seattle, 28 Vegas,', MX, 930, 9, '#444444');
+  drawText(cv, sansR, '29 Johannesburg, 30 Tehran, 31 Leeds, 32 Rome.', MX, 942, 9, '#444444');
+  drawText(cv, sansR, 'EACH DOT IS A STORY LOCATION — STORIES SHARING A CITY SHARE A DOT', MX + 286, 964, 8.5, GREY, { align: 'center', tracking: 0.8 });
 
-  // ---- 22 MORE STORIES (right column) ----
-  drawText(cv, sansB, '22 MORE STORIES', 616, 686, 13, INK, { tracking: 1 });
-  cv.rect(616, 692, 380, 2, RED);
+  // ---- 29 MORE STORIES (right column) ---- rev7: 22 + 7 verified new stories
+  drawText(cv, sansB, '29 MORE STORIES', 616, 660, 13, INK, { tracking: 1 });
+  cv.rect(616, 666, 380, 2, RED);
   const more = [
     ['SOMALIA', 'UAE envoy’s 72-hour deadline expires today.'],
     ['UKRAINE', 'Missile strike on Kryvyi Rih kills 2, injures 83. (AP)'],
@@ -1140,13 +1151,21 @@ function buildRest(p) {
     ['KYIV', 'Drone wrecks 5-storey block; 2 hurt. (UkrInform)'],
     ['NBA', 'Bridges buzzer-beater lifts Knicks 97-96. (Reuters)'],
     ['F1', 'Verstappen wins Las Vegas GP for 3rd time. (Reuters)'],
+    // rev7: 7 new verified stories for 22 Nov 2026 (in the order verified)
+    ['SOUTH AFRICA', 'G20 opens in Johannesburg; US stays away. (Reuters)'],
+    ['IRAN', 'Rolling blackouts begin; up to 2 hours a day. (Straits Times)'],
+    ['ENGLAND', 'Leeds thrash Chelsea 4-1 at Stamford Bridge. (Reuters)'],
+    ['GULF', 'Gulf bourses slide as attacks continue. (Reuters)'],
+    ['VATICAN', 'Pope shares lunch with 1,300 poor. (Vatican)'],
+    ['INDONESIA', 'EU trade deal signed after 10 years of talks. (Reuters)'],
+    ['ISRAEL', 'Eisenkot invites Likud to coalition talks. (AFP)'],
   ];
   for (let i = 0; i < more.length; i++) {
-    const y = 708 + i * 12.3; // rev6: looser leading so the list reaches the footer
-    cv.rect(616, y - 6.5, 5, 5, RED);
-    drawText(cv, sansB, more[i][0] + ' — ', 626, y, 10, INK, { tracking: 0.3 });
-    const w0 = textWidth(sansB, more[i][0] + ' — ', 10, 1, 0.3);
-    drawText(cv, sansR, more[i][1], 626 + w0, y, 10, '#333333');
+    const y = 676 + i * 10.4; // rev7: denser leading so 29 items reach the footer
+    cv.rect(616, y - 6, 5, 5, RED);
+    drawText(cv, sansB, more[i][0] + ' — ', 626, y, 9.5, INK, { tracking: 0.3 });
+    const w0 = textWidth(sansB, more[i][0] + ' — ', 9.5, 1, 0.3);
+    drawText(cv, sansR, more[i][1], 626 + w0, y, 9.5, '#333333');
   }
 
   // ---- footer: DATE CHECK ----
@@ -1156,7 +1175,7 @@ function buildRest(p) {
   // rev6: two-line footer (rank 1 has a full DATE CHECK note, not one line)
   drawText(cv, sansB, 'DATE CHECK', MX + 10, 998, 11, RED, { tracking: 1 });
   drawText(cv, sansR, 'Every story on this page was verified from primary sources for Sunday 22 November 2026.', MX + 108, 992, 10, INK);
-  drawText(cv, sansR, 'Stories are numbered 1–35; every dot on the map is a story on this page. Sources are named beside each story.', MX + 108, 1004, 10, INK);
+  drawText(cv, sansR, '42 stories on this page; 32 numbered dots mark their locations — stories in the same city share a dot. Sources are named beside each story.', MX + 108, 1004, 10, INK);
   drawText(cv, serifB, 'THE WORLD TODAY', RX - 10, 998, 12, INK, { align: 'right' });
 }
 
